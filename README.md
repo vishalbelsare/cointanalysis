@@ -1,7 +1,7 @@
 # CointAnalysis
 
 [![version](https://img.shields.io/pypi/v/cointanalysis.svg)](https://pypi.org/project/cointanalysis/)
-[![Build Status](https://travis-ci.com/simaki/fracdiff.svg?branch=master)](https://travis-ci.com/simaki/cointanalysis)
+[![Build Status](https://travis-ci.com/simaki/cointanalysis.svg?branch=master)](https://travis-ci.com/simaki/cointanalysis)
 [![LICENSE](https://img.shields.io/github/license/simaki/cointanalysis)](LICENSE)
 
 Python library for cointegration analysis.
