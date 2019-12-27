@@ -1,7 +1,16 @@
 # CointAnalysis
 
-## Features
+[![version](https://img.shields.io/pypi/v/fracdiff.svg)](https://pypi.org/project/fracdiff/)
+[![Build Status](https://travis-ci.com/simaki/fracdiff.svg?branch=master)](https://travis-ci.com/simaki/fracdiff)
+[![LICENSE](https://img.shields.io/github/license/simaki/fracdiff)](https://github.com/simaki/fracdiff/blob/master/LICENSE)
 
+Python library for cointegration analysis.
+
+## Functions and Features
+
+- Carry out cointegration test
+- Evaluate spread between cointegrated time-series
+- Generate cointegrated time-series artificially
 - Based on scikit-learn API
 
 ## Installation
@@ -59,7 +68,8 @@ coint.std_
 ```
 
 This means that spread "-0.18 HYG + BKLN" has the mean 7.00 and standard deviation 0.15.
-In fact the prices adjusted with these parameters clarifies the similarities of these ETFs:
+
+In fact, the prices adjusted with these parameters clarifies the similarities of these ETFs:
 
 ![hyg-bkln-adjust](./sample/hyg-bkln-adjust.png)
 
@@ -83,7 +93,6 @@ spread = coint.fit_transform(X)
 The result looks like this:
 
 ![hyg-bkln-spread](./sample/hyg-bkln-spread.png)
-
 
 ## Acknowledgements
 

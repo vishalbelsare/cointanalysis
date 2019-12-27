@@ -12,12 +12,12 @@ with open('LICENSE') as f:
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-description = """Cointegration analysis."""
+description = """Python library for cointegration analysis."""
 
 
 setup(
     name='cointanalysis',
-    version='0.0.0',
+    version='0.0.1',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',
