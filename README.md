@@ -6,6 +6,8 @@
 
 Python library for cointegration analysis.
 
+![hyg-bkln-adjust](./sample/hyg-bkln-adjust.png)
+
 ## Features
 
 - Carry out cointegration test
