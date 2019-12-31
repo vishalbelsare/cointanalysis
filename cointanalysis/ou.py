@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class OU:
+class OrnsteinUhlenbeck:
     """
     Generator of Ornstein-Uhlenbeck process.
 

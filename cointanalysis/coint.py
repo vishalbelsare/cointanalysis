@@ -4,6 +4,8 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import coint
 
+from .stat import StationarityTest:
+
 
 class CointAnalysis(TransformerMixin):
     """
