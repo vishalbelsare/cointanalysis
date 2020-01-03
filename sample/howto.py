@@ -31,11 +31,11 @@ def plot_prices(hyg, bkln):
 def plot_adjust(hyg, bkln, coint):
     plt.figure(figsize=(16, 4))
 
-    hyg_ = (-coint.coef_[0]) * hyg + coint.const_
+    hyg_ = (-coint.coef_[0]) * hyg + coint.mean_
 
     plt.title('HYG and BKLN')
     plt.plot(hyg_,
-             label=f'{-coint.coef_[0]:.2f} * HYG + {coint.const_:.2f}',
+             label=f'{-coint.coef_[0]:.2f} * HYG + {coint.mean_:.2f}',
              linewidth=1)
     plt.plot(bkln, label='BKLN', linewidth=1)
 
@@ -59,16 +59,17 @@ def main():
     X = np.array([hyg, bkln]).T
     coint = CointAnalysis()
 
-    # score
-    pvalue = coint.score(X)
+    # pvalue
+    pvalue = coint.pvalue(X)
     print(f'pvalue: {pvalue}')
 
     # fit, transform
     spread = pd.Series(coint.fit_transform(X), index=hyg.index)
     print(f'coef: {coint.coef_}')
-    print(f'const: {coint.const_}')
+    print(f'mean: {coint.mean_}')
     print(f'std: {coint.std_}')
 
+    # plot
     plot_prices(hyg, bkln)
     plot_adjust(hyg, bkln, coint)
     plot_spread(spread)
