@@ -17,7 +17,7 @@ description = """Python library for cointegration analysis."""
 
 setup(
     name='cointanalysis',
-    version='0.0.1',
+    version='0.1.0',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',
@@ -27,7 +27,7 @@ setup(
     maintainer='Shota Imaki',
     maintainer_email='shota.imaki@icloud.com',
     url='https://github.com/simaki/cointanalysis',
-    packages=find_packages(include=["coint", "coint.*"]),
+    packages=['cointanalysis'],
     license=license,
     classifiers=[
         'Intended Audience :: Financial and Insurance Industry',
