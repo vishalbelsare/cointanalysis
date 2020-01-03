@@ -15,10 +15,10 @@ class StationarityTest:
     >>> np.random.seed(42)
     >>> gauss = np.random.randn(100)  # stationary
     >>> stat = StationarityAnalisis()
-    >>> stat.score(gauss)  # returns p-value
+    >>> stat.pvalue(gauss)  # returns p-value
     1.16e-17
     >>> brown = gauss.cumsum()
-    >>> stat.score(brown)  # returns p-value
+    >>> stat.pvalue(brown)  # returns p-value
     0.60
     """
     def __check_method(self, method):

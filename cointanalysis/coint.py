@@ -1,42 +1,50 @@
 import numpy as np
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import coint
 
-from .stat import StationarityTest:
+from sklearn.utils.validation import check_array, check_is_fitted, assert_all_finite
+
+from .stat import StationarityTest
 
 
-class CointAnalysis(TransformerMixin):
+class CointAnalysis(BaseEstimator, TransformerMixin):
     """
     Parameters
     ----------
-    - method : {'AEG'}, default 'AEG'
+    - method : {'AEG'}, default='AEG'
         Test method.
-    - axis : {0, 1, 'PCA'}
+        If 'AEG', Augmented Dickey-Fuller test.
+    - axis : {'0', '1', 'PCA'}, default=0
         If 0, regress 0th series to 1st series.
         If 1, regress 1st series to 0th series.
         If 'PCA', use PC1.
-    - trend : {'c', 'nc'}, default 'c'
+    - trend : {'c', 'nc'}, default='c'
         - 'c' : residual = constant
         - 'nc' : residual = 0
+    - adjust_mean : bool, default True
+        If True, subtract mean from the spread.
+    - adjust_std : bool, default True
+        If True, normalize spread so that std of the spread
+        becomes unity.
 
     Attributes
     ----------
-    - coef_ : array-like, shape (2, )
+    - coef_ : array, shape (2, )
         The coefficients of prices to make maximally
         stationary spread `spread = X.dot(coef_)`.
-    - const_ : float
-        The trend constant of the spread.
-        For `trend = 'nc'`, it is always 0.0.
+    - mean_ : float
+        The estimated trend constant of the spread.
+        If `trend = 'nc'`, 0.0.
     - std_ : float
         The estimated standard deviation of the spread.
 
     Notes
     -----
-    The values `coef_ = (b0, b1)` and `const_ = c` implies that
-    ```spread = b0 * X[:, 0] + b1 * X[:, 1]```
-    is stationary around c.
+    Given two series are cointegrated, `coef_ = (b0, b1)` and `mean_ = c` implies that
+    ```spread = b0 * X[:, 0] + b1 * X[:, 1] - c```
+    is stationary around 0.
 
     Examples
     --------
@@ -52,28 +60,129 @@ class CointAnalysis(TransformerMixin):
     >>> coint.coef_.dot(X)
     ...
     """
+    def __init__(self,
+                 method='AEG',
+                 axis='0',
+                 trend='c',
+                 adjust_mean=True,
+                 adjust_std=True):
+        """Initialize self."""
+        self.method = method
+        self.axis = axis
+        self.trend = trend
+        self.adjust_mean = adjust_mean
+        self.adjust_std = adjust_std
+
+    def fit(self, X, y=None):
+        """
+        Fit by linear regression (for axis = '0', '1') or PCA (for 'PCA')
+        to evaluate self.coef_, self.mean_, and self.std_.
+
+        Parameters
+        ----------
+        - X : array, shape (n_samples, 2)
+            A pair of time-series.
+        - y : None
+            Ignored.
+
+        Returns
+        -------
+        self
+        """
+        X = check_array(X)
+        assert_all_finite(X)
+        if X.shape[1] != 2:
+            raise ValueError('X.shape[1] should be 2.')
+
+        if self.axis in ('0', '1'):
+            if self.axis == '0':
+                X, y = X[:, 0].reshape(-1, 1), X[:, 1]
+            if self.axis == '1':
+                X, y = X[:, 1].reshape(-1, 1), X[:, 0]
+
+            if self.trend == 'c':
+                fi = True  # fit intercept
+            if self.trend == 'nc':
+                fi = False
+
+            reg = LinearRegression(fit_intercept=fi).fit(X, y)
+
+            if self.axis == '0':
+                self.coef_ = np.array([- reg.coef_[0], 1.0])
+            if self.axis == '1':
+                self.coef_ = np.array([1.0, - reg.coef_[0]])
+
+            self.mean_ = getattr(reg, 'intercept_', 0.0)
+            self.std_ = (y - reg.predict(X)).std()
+
+        if self.axis == 'PCA':
+            if self.trend == 'c':
+                pca = PCA(n_components=2).fit(X)
+                self.coef_ = pca.components_[1]
+                self.mean_ = pca.mean_.dot(self.coef_)
+                # self.mean_ = X.dot(self.coef_).mean()
+                self.std_ = np.sqrt(pca.explained_variance_[1])
+            if self.trend == 'nc':
+                rms0 = self.__class__.__rms(X[:, 0])
+                rms1 = self.__class__.__rms(X[:, 1])
+                self.coef_ = np.array([1 / rms0, -1 / rms1])
+                self.mean_ = 0.0
+                self.std_ = X.dot(self.coef_).std()
+
+        return self
+
     def __check_method(self, method):
         if method not in ('AEG', ):
             raise ValueError(f'Invalid method: {method}.')
 
     def __check_axis(self, axis):
-        if axis not in (0, 1, 'PCA'):
+        if axis not in ('0', '1', 'PCA'):
             raise ValueError(f'Invalid axis: {axis}.')
 
     def __check_trend(self, trend):
         if trend not in ('c', 'nc'):
             raise ValueError(f'Invalid trend: {trend}.')
 
-    def __init__(self, method='AEG', axis=0, trend='c'):
-        """Initialize self."""
-        self.__check_method(method)
-        self.method = method
-        self.__check_axis(axis)
-        self.axis = axis
-        self.__check_trend(trend)
-        self.trend = trend
+    @staticmethod
+    def __rms(array):
+        """Root-mean square"""
+        return np.sqrt(array.mean() ** 2 + array.std() ** 2)
 
-    def pvalue(self, X, y=None, method='AEG', stat_method='ADF', stat_pvalue=.05):
+    def transform(self, X):
+        """
+        Return spread of X.
+
+        Parameters
+        ----------
+        - X : array, shape (n_samples, 2)
+            A pair of price data, where n_samples is the number of samples.
+        - y : None
+            Ignored.
+
+        Returns
+        -------
+        X_spread : array, shape (n_samples, )
+            Spread.
+        """
+        check_is_fitted(self, ['coef_', 'mean_', 'std_'])
+        X = check_array(X)
+        assert_all_finite(X)
+        if X.shape[1] != 2:
+            raise ValueError('X.shape[1] should be 2.')
+
+        spread = X.dot(self.coef_)
+
+        if self.adjust_mean:
+            spread -= self.mean_
+        if self.adjust_std:
+            if not self.std_ < 10e-10:
+                spread /= self.std_
+            else:
+                raise RuntimeWarning(f'Did not normalize the spread because'
+                                     f'std {self.std_} < 10e-10.')
+        return spread
+
+    def pvalue(self, X, y=None, stat_method='ADF', stat_pvalue=.05):
         """
         Return p-value of cointegration test.
         Null-hypothesis is no cointegration.
@@ -101,6 +210,7 @@ class CointAnalysis(TransformerMixin):
         pvalue : float
             p-value of cointegration test.
         """
+        assert_all_finite(X)
 
         # Stationarity test
         stationarity = StationarityTest(method=stat_method, regression='c')
@@ -109,10 +219,10 @@ class CointAnalysis(TransformerMixin):
             return np.nan
 
         # Cointegration test
-        if self.axis in (0, 1):
-            if self.axis == 0:
+        if self.axis in ('0', '1'):
+            if self.axis == '0':
                 X0, X1 = X[:, 0], X[:, 1]
-            if self.axis == 1:
+            if self.axis == '1':
                 X0, X1 = X[:, 1], X[:, 0]
             if self.method == 'AEG':
                 _, pvalue, _ = coint(X0, X1, trend=self.trend)
@@ -124,107 +234,16 @@ class CointAnalysis(TransformerMixin):
                 # Usual PCA from the center of distribution
                 spread = PCA(n_components=2).fit_transform(X)[:, 1]  # PC1
                 stat = StationarityTest(method='ADF', regression='nc')
-                pvalue = stat.score(spread)
+                pvalue = stat.pvalue(spread)
                 return pvalue
             if self.trend == 'nc':
                 # pseudo PCA from origin
                 rms0 = self.__class__.__rms(X[:, 0])
                 rms1 = self.__class__.__rms(X[:, 1])
                 spread = X[:, 0] / rms0 - X[:, 1] / rms1
-                stat = StationarityTest(method='ADF', regression='nc')
-                pvalue = stat.score(spread)
+                stat = StationarityTest(method='ADF', regression='nc')  # TODO method
+                pvalue = stat.pvalue(spread)
                 return pvalue
             raise ValueError
 
         raise ValueError
-
-    def fit(self, X, y=None):
-        """
-        Fit by linear regression (for axis = 0, 1) or PCA
-        to evaluate self.coef_ and self.const_.
-
-        Parameters
-        ----------
-        - X : array, shape (n_samples, 2)
-            A pair of price data, where n_samples is the number of samples.
-        - y : None
-            Ignored.
-
-        Returns
-        -------
-        self
-        """
-        if self.axis in (0, 1):
-            if self.axis == 0:
-                X, y = X[:, 0].reshape(-1, 1), X[:, 1]
-            if self.axis == 1:
-                X, y = X[:, 1].reshape(-1, 1), X[:, 0]
-
-            if self.trend == 'c':
-                fi = True
-            if self.trend == 'nc':
-                fi = False
-
-            reg = LinearRegression(fit_intercept=fi).fit(X, y)
-
-            if self.axis == 0:
-                self.coef_ = np.array([- reg.coef_[0], 1.0])
-            if self.axis == 1:
-                self.coef_ = np.array([1.0, - reg.coef_[0]])
-
-            self.const_ = getattr(reg, 'intercept_', 0.0)
-            self.std_ = (y - reg.predict(X)).std()
-
-        if self.axis == 'PCA':
-            if self.trend == 'c':
-                pca = PCA(n_components=2).fit(X)
-                self.coef_ = pca.components_[1]
-                self.const_ = pca.mean_.dot(self.coef_)
-                self.std_ = np.sqrt(pca.explained_variance_[1])
-            if self.trend == 'nc':
-                rms0 = self.__class__.__rms(X[:, 0])
-                rms1 = self.__class__.__rms(X[:, 1])
-                self.coef_ = np.array([1 / rms0, -1 / rms1])
-                self.const_ = 0.0
-                self.std_ = X.dot(self.coef_).std()
-
-        return self
-
-    def transform(self, X, y=None,
-                  subtract_const=True,
-                  normalize_std=True):
-        """
-        Return spread of X.
-
-        Parameters
-        ----------
-        - X : array, shape (n_samples, 2)
-            A pair of price data, where n_samples is the number of samples.
-        - y : None
-            Ignored.
-        - subtract_const : bool, default True
-            If True, subtract constant from the spread.
-        - normalize_std : bool, default True
-            If True, normalize spread so that std of the spread
-            becomes unity.
-
-        Returns
-        -------
-        X_spread : array, shape (n_samples, )
-            Spread of two 1d arrays.
-        """
-        spread = X.dot(self.coef_)
-        if subtract_const:
-            spread -= self.const_
-        if normalize_std:
-            if self.std_ < 10E-10:
-                raise RuntimeWarning(f'Did not normalize spread since'
-                                     f'std {self.std} < 10E-10.')
-            else:
-                spread /= self.std_
-        return spread
-
-    @staticmethod
-    def __rms(array):
-        """Root-mean square"""
-        return np.sqrt(array.mean() ** 2 + array.std() ** 2)
