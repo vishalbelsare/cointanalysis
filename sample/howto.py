@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 
 from cointanalysis import CointAnalysis
 
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
 
 def fetch_etf(ticker):
     return pandas_datareader.data.DataReader(
@@ -43,7 +46,6 @@ def plot_spread(spread):
     plt.title('Spread between HYG and BKLN')
     plt.plot(spread, linewidth=1)
 
-    plt.legend()
     plt.savefig('hyg-bkln-spread.png', bbox_inches="tight", pad_inches=0.1)
 
 
