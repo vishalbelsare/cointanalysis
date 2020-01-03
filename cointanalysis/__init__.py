@@ -1,3 +1,4 @@
 # flake8: noqa
 
-from .coint import StationarityTest, CointAnalysis
+from .coint import CointAnalysis
+from .ou import OrnsteinUhlenbeck

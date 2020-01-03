@@ -6,7 +6,9 @@
 
 Python library for cointegration analysis.
 
-## Functions and Features
+![hyg-bkln-adjust](./sample/hyg-bkln-adjust.png)
+
+## Features
 
 - Carry out cointegration test
 - Evaluate spread between cointegrated time-series
