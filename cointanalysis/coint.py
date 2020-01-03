@@ -4,7 +4,11 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import coint
 
-from sklearn.utils.validation import check_array, check_is_fitted, assert_all_finite
+from sklearn.utils.validation import (
+    check_array,
+    check_is_fitted,
+    assert_all_finite
+)
 
 from .stat import StationarityTest
 
@@ -42,7 +46,8 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
     Notes
     -----
-    Given two series are cointegrated, `coef_ = (b0, b1)` and `mean_ = c` implies that
+    Given two series are cointegrated, `coef_ = (b0, b1)` and
+    `mean_ = c` implies that
     ```spread = b0 * X[:, 0] + b1 * X[:, 1] - c```
     is stationary around 0.
 
@@ -241,7 +246,8 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
                 rms0 = self.__class__.__rms(X[:, 0])
                 rms1 = self.__class__.__rms(X[:, 1])
                 spread = X[:, 0] / rms0 - X[:, 1] / rms1
-                stat = StationarityTest(method='ADF', regression='nc')  # TODO method
+                # TODO method
+                stat = StationarityTest(method='ADF', regression='nc')
                 pvalue = stat.pvalue(spread)
                 return pvalue
             raise ValueError

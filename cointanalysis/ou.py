@@ -21,13 +21,13 @@ class OrnsteinUhlenbeck:
     -----
     The evolution process is given by
 
-    .. math:: dx_t = - k * (x_t - \mu) + \sigma dW_t
+    .. math:: dx_t = - k * (x_t - \\mu) + \\sigma dW_t
 
-    where :math:`\mu, \sigma` are `mean` and `vola`.
+    where :math:`\\mu, \\sigma` are `mean` and `vola`.
     A wiener process with unit volatility is denoted by :math:`W_t`.
 
     The long-term standard deviation is given by
-    :math:`\sqrt{sigma^2 / (2 k)}`, not `\sigma`.
+    :math:`\\sqrt{sigma^2 / (2 k)}`, not `\\sigma`.
     """
     def __init__(self, k=1.0, mean=1.0, vola=1.0):
         """Initialize self."""
