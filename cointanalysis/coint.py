@@ -53,17 +53,25 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
     Examples
     --------
-    >>> df
-               stock1  stock2
-    2000-01-01   1234    2468
-    2000-01-02   1235    2470
-          ....   ....    ....
-    >>> X = df.values
-    >>> coint = CointAnalysis().fit(X)
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>> x0 = np.random.rand(1000).cumsum()
+    >>> x1 = 2 * x0 + np.random.rand(1000)
+    >>> X = np.array([x0, x1]).T
+    >>> coint = CointAnalysis()
+    >>> coint.pvalue(X)
+    1.92836794233469e-18
+
+    >>> coint.fit(X)
     >>> coint.coef_
-    (1.0, -0.5)
-    >>> coint.coef_.dot(X)
-    ...
+    array([-1.99831281,  1. ])
+    >>> coint.mean_
+    0.011497817617380335
+    >>> coint.std_
+    0.9488566139638319
+
+    >>> coint.transform(X)
+    array([-1.50289357, ...])
     """
     def __init__(self,
                  method='AEG',
