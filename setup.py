@@ -27,7 +27,7 @@ setup(
     maintainer='Shota Imaki',
     maintainer_email='shota.imaki@icloud.com',
     url='https://github.com/simaki/cointanalysis',
-    packages=find_packages(include=["coint", "coint.*"]),
+    packages=find_packages(include=["cointanalysis", "cointanalysis.*"]),
     license=license,
     classifiers=[
         'Intended Audience :: Financial and Insurance Industry',
