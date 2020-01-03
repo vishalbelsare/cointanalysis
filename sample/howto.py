@@ -16,11 +16,14 @@ def plot_prices(hyg, bkln):
     plt.figure(figsize=(16, 4))
 
     plt.title('HYG and BKLN')
-    plt.plot(100 * hyg / hyg[0], label='HYG (2012-01-01 = 100)', linewidth=1)
-    plt.plot(100 * bkln / bkln[0], label='BKLN (2012-01-01 = 100)', linewidth=1)
+    hyg_norm = 100 * hyg / hyg[0]
+    bkln_norm = 100 * bkln / bkln[0]
+    plt.plot(hyg_norm, label='HYG (2012-01-01 = 100)', linewidth=1)
+    plt.plot(bkln_norm, label='BKLN (2012-01-01 = 100)', linewidth=1)
 
     plt.legend()
     plt.savefig('hyg-bkln.png', bbox_inches="tight", pad_inches=0.1)
+
 
 def plot_adjust(hyg, bkln, coint):
     plt.figure(figsize=(16, 4))
