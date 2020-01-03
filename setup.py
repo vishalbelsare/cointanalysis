@@ -17,7 +17,7 @@ description = """Python library for cointegration analysis."""
 
 setup(
     name='cointanalysis',
-    version='0.0.1',
+    version='0.1.0',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',
