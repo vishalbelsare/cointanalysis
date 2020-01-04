@@ -34,7 +34,7 @@ Since they are both connected with liabilities of low-rated companies, these pri
 
 ### Cointegration test
 
-The method `pvalue` carries out a cointegration test.
+The method `test` carries out a cointegration test.
 The following code gives p-value for null-hypothesis that there is no cointegration.
 
 ```python
@@ -45,7 +45,9 @@ bkln = ...  # Fetch historical price of bank loan ETF
 X = np.array([hyg, bkln]).T
 
 coint = CointAnalysis()
-coint.pvalue(X)
+coint.test(X)
+
+coint.pvalue_
 # 0.0055
 ```
 
