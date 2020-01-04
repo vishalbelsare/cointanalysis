@@ -48,6 +48,12 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         If `trend = 'nc'`, always 0.0.
     - std_ : float
         Standard deviation of the spread.
+    - stat_ : float
+        Statistics of cointegration test.
+    - pvalue_ : float
+        P-value of cointegration test.
+    - crit_ : 3-tuple of floats
+        Critical values for test statistics at 1 %, 5 %, and 10 %.
 
     Notes
     -----
@@ -135,27 +141,31 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             reg = LinearRegression(fit_intercept=fi).fit(X, y)
 
             if self.axis == '0':
-                self.coef_ = np.array([- reg.coef_[0], 1.0])
+                coef_ = np.array([- reg.coef_[0], 1.0])
             if self.axis == '1':
-                self.coef_ = np.array([1.0, - reg.coef_[0]])
+                coef_ = np.array([1.0, - reg.coef_[0]])
 
-            self.mean_ = getattr(reg, 'intercept_', 0.0)
-            self.std_ = (y - reg.predict(X)).std()
+            mean_ = getattr(reg, 'intercept_', 0.0)
+            std_ = (y - reg.predict(X)).std()
 
         if self.axis == 'PCA':
             if self.trend == 'c':
                 pca = PCA(n_components=2).fit(X)
-                self.coef_ = pca.components_[1]
-                self.mean_ = pca.mean_.dot(self.coef_)
-                self.std_ = np.sqrt(pca.explained_variance_[1])
+                coef_ = pca.components_[1]
+                mean_ = pca.mean_.dot(coef_)
+                std_ = np.sqrt(pca.explained_variance_[1])
             if self.trend == 'nc':
                 # This is pseudo-PCA, without adjusting the origin to the
                 # center of samples.
                 rms0 = rms(X[:, 0])
                 rms1 = rms(X[:, 1])
-                self.coef_ = np.array([1 / rms0, -1 / rms1])
-                self.mean_ = 0.0
-                self.std_ = X.dot(self.coef_).std()
+                coef_ = np.array([1 / rms0, -1 / rms1])
+                mean_ = 0.0
+                std_ = X.dot(coef_).std()
+
+        self.coef_ = coef_
+        self.mean_ = mean_
+        self.std_ = std_
 
         return self
 
@@ -196,9 +206,9 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
         return spread
 
-    def pvalue(self, X, stat_method='ADF', stat_pvalue=.05):
+    def test(self, X, stat_method='ADF', stat_pvalue=.05):
         """
-        Return p-value of cointegration test.
+        Carry out cointegration test.
         Null-hypothesis is no cointegration.
 
         Notes
@@ -217,7 +227,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        pvalue
+        self
         """
         self.__check_params()
         X = check_array(X)
@@ -229,7 +239,13 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         stat = StationarityTest(method=stat_method, regression='c')
         if stat.is_stationary(X[:, 0], stat_pvalue) \
                 or stat.is_stationary(X[:, 1], stat_pvalue):
-            return np.nan
+            stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3
+
+            self.stat_ = stat_
+            self.pvalue_ = pvalue_
+            self.crit_ = crit_
+
+            return self
 
         # Cointegration test
         if self.axis in ('0', '1'):
@@ -239,18 +255,24 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
                 X0, X1 = X[:, 1], X[:, 0]
 
             if self.method == 'AEG':
-                _, pvalue, _ = coint(X0, X1, trend=self.trend)
+                stat_, pvalue_, crit_ = coint(X0, X1, trend=self.trend)
             if self.method == 'KPSS':
-                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
+                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
             if self.method == 'Johansen':
-                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
+                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
         if self.axis == 'PCA':
-            if self.method == 'AEG':
-                _, pvalue, _ = aeg_pca(X[:, 0], X[:, 1], trend=self.trend)
-            if self.method == 'KPSS':
-                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
-            if self.method == 'Johansen':
-                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
+            X0, X1 = X[:, 0], X[:, 1]
 
-        return pvalue
+            if self.method == 'AEG':
+                stat_, pvalue_, crit_ = aeg_pca(X0, X1, trend=self.trend)
+            if self.method == 'KPSS':
+                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            if self.method == 'Johansen':
+                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+
+        self.stat_ = stat_
+        self.pvalue_ = pvalue_
+        self.crit_ = crit_
+
+        return self
