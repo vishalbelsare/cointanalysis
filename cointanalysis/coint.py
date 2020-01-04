@@ -11,45 +11,50 @@ from sklearn.utils.validation import (
 )
 
 from .stat import StationarityTest
+from ._aeg_pca import aeg_pca
+from ._utils import rms
 
 
 class CointAnalysis(BaseEstimator, TransformerMixin):
     """
+    Cointegration Analysis.
+
     Parameters
     ----------
     - method : {'AEG'}, default='AEG'
         Test method.
         If 'AEG', Augmented Dickey-Fuller test.
-    - axis : {'0', '1', 'PCA'}, default=0
-        If 0, regress 0th series to 1st series.
-        If 1, regress 1st series to 0th series.
-        If 'PCA', use PC1.
+    - axis : {'0', '1', 'PCA'}, default='0'
+        How to obtain the spread.
+        If '0', regress 0th series to 1st series and use the residual.
+        If '1', regress 1st series to 0th series and use the residual.
+        If 'PCA', carry out principal component analysis and use PC1.
     - trend : {'c', 'nc'}, default='c'
-        - 'c' : residual = constant
-        - 'nc' : residual = 0
+        Specifies the presence of constant term in the residual.
+        If 'c', Allow residual to have a constant term.
+        If 'nc', Prohibit residual to have a constant term.
     - adjust_mean : bool, default True
-        If True, subtract mean from the spread.
+        If True, subtract mean when evaluating the spread.
     - adjust_std : bool, default True
-        If True, normalize spread so that std of the spread
-        becomes unity.
+        If True, normalize std to unity when evaluating the spread.
 
     Attributes
     ----------
     - coef_ : array, shape (2, )
-        The coefficients of prices to make maximally
-        stationary spread `spread = X.dot(coef_)`.
+        Coefficients of time-series in the cointegration equation.
+        Also known as a cointegration vector.
     - mean_ : float
-        The estimated trend constant of the spread.
-        If `trend = 'nc'`, 0.0.
+        Constant term in the cointegration equation.
+        If `trend = 'nc'`, always 0.0.
     - std_ : float
-        The estimated standard deviation of the spread.
+        Standard deviation of the spread.
 
     Notes
     -----
-    Given two series are cointegrated, `coef_ = (b0, b1)` and
+    Given a pair of time-series is cointegrated, `coef_ = (b0, b1)` and
     `mean_ = c` implies that
     ```spread = b0 * X[:, 0] + b1 * X[:, 1] - c```
-    is stationary around 0.
+    is stationary around 0. Std of this spread is given by 'std_'.
 
     Examples
     --------
@@ -72,7 +77,16 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
     >>> coint.transform(X)
     array([-1.50289357, ...])
+    # = (X.dot(coint.coef_) - coint.mean_) / coint.std_)
     """
+    def __check_params(self):
+        if self.method not in ('AEG', ):
+            raise ValueError(f'Invalid method: {self.method}.')
+        if self.axis not in ('0', '1', 'PCA'):
+            raise ValueError(f'Invalid axis: {self.axis}.')
+        if self.trend not in ('c', 'nc'):
+            raise ValueError(f'Invalid trend: {self.trend}.')
+
     def __init__(self,
                  method='AEG',
                  axis='0',
@@ -88,13 +102,12 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         """
-        Fit by linear regression (for axis = '0', '1') or PCA (for 'PCA')
-        to evaluate self.coef_, self.mean_, and self.std_.
+        Fit the model with X.
 
         Parameters
         ----------
-        - X : array, shape (n_samples, 2)
-            A pair of time-series.
+        - X : array-like, shape (n_samples, 2)
+            A pair of time-series, where n_samples is the number of samples.
         - y : None
             Ignored.
 
@@ -102,6 +115,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        self.__check_params()
         X = check_array(X)
         assert_all_finite(X)
         if X.shape[1] != 2:
@@ -133,49 +147,35 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
                 pca = PCA(n_components=2).fit(X)
                 self.coef_ = pca.components_[1]
                 self.mean_ = pca.mean_.dot(self.coef_)
-                # self.mean_ = X.dot(self.coef_).mean()
                 self.std_ = np.sqrt(pca.explained_variance_[1])
             if self.trend == 'nc':
-                rms0 = self.__class__.__rms(X[:, 0])
-                rms1 = self.__class__.__rms(X[:, 1])
+                # This is pseudo-PCA, without adjusting the origin to the
+                # center of samples.
+                rms0 = rms(X[:, 0])
+                rms1 = rms(X[:, 1])
                 self.coef_ = np.array([1 / rms0, -1 / rms1])
                 self.mean_ = 0.0
                 self.std_ = X.dot(self.coef_).std()
 
         return self
 
-    def __check_method(self, method):
-        if method not in ('AEG', ):
-            raise ValueError(f'Invalid method: {method}.')
-
-    def __check_axis(self, axis):
-        if axis not in ('0', '1', 'PCA'):
-            raise ValueError(f'Invalid axis: {axis}.')
-
-    def __check_trend(self, trend):
-        if trend not in ('c', 'nc'):
-            raise ValueError(f'Invalid trend: {trend}.')
-
-    @staticmethod
-    def __rms(array):
-        """Root-mean square"""
-        return np.sqrt(array.mean() ** 2 + array.std() ** 2)
-
     def transform(self, X):
         """
-        Return spread of X.
+        Return the cointegration spread.
 
         Parameters
         ----------
-        - X : array, shape (n_samples, 2)
-            A pair of price data, where n_samples is the number of samples.
+        - X : array-like, shape (n_samples, 2)
+            A pair of time-series, where n_samples is the number of samples.
         - y : None
             Ignored.
 
         Returns
         -------
-        X_spread : array, shape (n_samples, )
+        X_spread : array-like, shape (n_samples, )
             Spread.
+            If `self.adjust_mean` and/or `self.adjust_std` are True,
+            mean and/or std are adjusted to 1.0 and 0.0.
         """
         check_is_fitted(self, ['coef_', 'mean_', 'std_'])
         X = check_array(X)
@@ -191,44 +191,44 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             if not self.std_ < 10e-10:
                 spread /= self.std_
             else:
-                raise RuntimeWarning(f'Did not normalize the spread because'
-                                     f'std {self.std_} < 10e-10.')
+                raise RuntimeWarning('Did not normalize the spread '
+                                     'because std < 10e-10.')
+
         return spread
 
-    def pvalue(self, X, y=None, stat_method='ADF', stat_pvalue=.05):
+    def pvalue(self, X, stat_method='ADF', stat_pvalue=.05):
         """
         Return p-value of cointegration test.
         Null-hypothesis is no cointegration.
 
         Notes
         -----
-        If X[:, 0] or X[:, 1] is stationary as such, return np.nan.
+        If X[:, 0] or X[:, 1] is stationary as such, return `np.nan`.
 
         Parameters
         ----------
-        - X : array, shape (n_samples, 2)
-            A pair of price data.
-        - y : None
-            Ignored.
-        - method : {'AEG'}, default 'AEG'
-            Method of cointegration test.
-            For self.axis = 'PCA', ignored (use ADF of PCA1).
+        - X : array-like, shape (n_samples, 2)
+            A pair of time-series, where n_samples is the number of samples.
         - stat_method : {'ADF'}, default 'ADF'
             Method of stationarity test.
+            If 'ADF', Augmented Dickey-Fuller test.
         - stat_pvalue : float, default .05
             Threshold of p-value of stationarity test.
 
         Returns
         -------
-        pvalue : float
-            p-value of cointegration test.
+        pvalue
         """
+        self.__check_params()
+        X = check_array(X)
         assert_all_finite(X)
+        if X.shape[1] != 2:
+            raise ValueError('X.shape[1] should be 2.')
 
         # Stationarity test
-        stationarity = StationarityTest(method=stat_method, regression='c')
-        if stationarity.is_stationary(X[:, 0], stat_pvalue) \
-                or stationarity.is_stationary(X[:, 1], stat_pvalue):
+        stat = StationarityTest(method=stat_method, regression='c')
+        if stat.is_stationary(X[:, 0], stat_pvalue) \
+                or stat.is_stationary(X[:, 1], stat_pvalue):
             return np.nan
 
         # Cointegration test
@@ -237,27 +237,20 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
                 X0, X1 = X[:, 0], X[:, 1]
             if self.axis == '1':
                 X0, X1 = X[:, 1], X[:, 0]
+
             if self.method == 'AEG':
                 _, pvalue, _ = coint(X0, X1, trend=self.trend)
-                return pvalue
-            raise ValueError
+            if self.method == 'KPSS':
+                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
+            if self.method == 'Johansen':
+                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
 
         if self.axis == 'PCA':
-            if self.trend == 'c':
-                # Usual PCA from the center of distribution
-                spread = PCA(n_components=2).fit_transform(X)[:, 1]  # PC1
-                stat = StationarityTest(method='ADF', regression='nc')
-                pvalue = stat.pvalue(spread)
-                return pvalue
-            if self.trend == 'nc':
-                # pseudo PCA from origin
-                rms0 = self.__class__.__rms(X[:, 0])
-                rms1 = self.__class__.__rms(X[:, 1])
-                spread = X[:, 0] / rms0 - X[:, 1] / rms1
-                # TODO method
-                stat = StationarityTest(method='ADF', regression='nc')
-                pvalue = stat.pvalue(spread)
-                return pvalue
-            raise ValueError
+            if self.method == 'AEG':
+                _, pvalue, _ = aeg_pca(X[:, 0], X[:, 1], trend=self.trend)
+            if self.method == 'KPSS':
+                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
+            if self.method == 'Johansen':
+                _, pvalue, _ = np.nan, np.nan, np.nan  # TODO not implemented
 
-        raise ValueError
+        return pvalue

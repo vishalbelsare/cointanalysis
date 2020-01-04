@@ -48,9 +48,7 @@ def test_positive(gauss, methods, axes, trends):
             x1 = gamma * x0 + gauss[:, 1]
             X = np.array([x0, x1]).T
 
-            pvalue = coint.pvalue(X)
-
-            assert pvalue < 0.1
+            assert coint.pvalue(X) < 0.1
 
 def test_negative(gauss, methods, axes, trends):
     """
@@ -70,9 +68,7 @@ def test_negative(gauss, methods, axes, trends):
             x1 = (gamma * x0 + gauss[:, 1]).cumsum()
             X = np.array([x0, x1]).T
 
-            pvalue = coint.pvalue(X)
-
-            assert pvalue > 0.1
+            assert coint.pvalue(X) > 0.1
 
 def test_stationary(gauss, methods, axes, trends):
     """
@@ -90,9 +86,7 @@ def test_stationary(gauss, methods, axes, trends):
         x1 = gauss[:, 1]
         X = np.array([x0, x1]).T
 
-        pvalue = coint.pvalue(X)
-
-        assert pvalue is np.nan
+        assert coint.pvalue(X) is np.nan
 
 def test_fit(gauss, methods, axes, trends):
     """
@@ -115,12 +109,13 @@ def test_fit(gauss, methods, axes, trends):
             coint.fit(X)
 
             gamma_fit = - coint.coef_[0] / coint.coef_[1]
+            gamma_exp = gamma
             mean_fit = coint.mean_
             mean_exp = 0.0
             std_fit = coint.std_
             std_exp = np.abs(coint.coef_[1])
 
-            assert np.isclose(gamma_fit, gamma, rtol=1e-1)
+            assert np.isclose(gamma_fit, gamma_exp, rtol=1e-1)
             assert np.isclose(mean_fit, mean_exp, atol=np.abs(coint.coef_[1]) * 1e-1)
             assert np.isclose(std_fit, std_exp, rtol=1e-1)
 
@@ -153,9 +148,5 @@ def test_transform(gauss, methods, axes, trends, adjusts):
                 mean_exp = coint.mean_
                 std_exp = coint.std_
 
-            try:
-                assert np.isclose(spread.mean(), mean_exp, atol=1e-2)
-                assert np.isclose(spread.std(), std_exp, rtol=1e-2)
-            except AssertionError as e:
-                print(method, axis, trend, adjust, gamma)
-                raise e
+            assert np.isclose(spread.mean(), mean_exp, atol=1e-2)
+            assert np.isclose(spread.std(), std_exp, rtol=1e-2)
