@@ -48,7 +48,7 @@ def test_positive(gauss, methods, axes, trends):
             x1 = gamma * x0 + gauss[:, 1]
             X = np.array([x0, x1]).T
 
-            assert coint.pvalue(X) < 0.1
+            assert coint.test(X).pvalue_ < 0.1
 
 def test_negative(gauss, methods, axes, trends):
     """
@@ -68,7 +68,7 @@ def test_negative(gauss, methods, axes, trends):
             x1 = (gamma * x0 + gauss[:, 1]).cumsum()
             X = np.array([x0, x1]).T
 
-            assert coint.pvalue(X) > 0.1
+            assert coint.test(X).pvalue_ > 0.1
 
 def test_stationary(gauss, methods, axes, trends):
     """
@@ -86,7 +86,7 @@ def test_stationary(gauss, methods, axes, trends):
         x1 = gauss[:, 1]
         X = np.array([x0, x1]).T
 
-        assert coint.pvalue(X) is np.nan
+        assert coint.test(X).pvalue_ is np.nan
 
 def test_fit(gauss, methods, axes, trends):
     """
