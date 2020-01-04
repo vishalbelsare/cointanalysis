@@ -5,7 +5,8 @@ python:
   - 3.8
 install:
   - echo "install start"
-  - pip install -r requirements.txt
+  - pip install poetry
+  - poetry install
   - echo "install end"
 before_script:
   - pip install flake8
