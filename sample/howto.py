@@ -60,7 +60,7 @@ def main():
     coint = CointAnalysis()
 
     # pvalue
-    pvalue = coint.pvalue(X)
+    pvalue = coint.test(X).pvalue_
     print(f'pvalue: {pvalue}')
 
     # fit, transform
