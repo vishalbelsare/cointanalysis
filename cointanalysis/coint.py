@@ -256,20 +256,20 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
             if self.method == 'AEG':
                 stat_, pvalue_, crit_ = coint(X0, X1, trend=self.trend)
-            if self.method == 'KPSS':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
-            if self.method == 'Johansen':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'KPSS':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'Johansen':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
         if self.axis == 'PCA':
             X0, X1 = X[:, 0], X[:, 1]
 
             if self.method == 'AEG':
                 stat_, pvalue_, crit_ = aeg_pca(X0, X1, trend=self.trend)
-            if self.method == 'KPSS':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
-            if self.method == 'Johansen':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'KPSS':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'Johansen':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
         self.stat_ = stat_
         self.pvalue_ = pvalue_
