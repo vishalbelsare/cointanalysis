@@ -1,7 +1,7 @@
 import pytest
 
 import numpy as np
-from fracdiff._stat import StationarityTester
+from cointanalysis._stat import StationarityTester
 
 
 list_seed = [42, 1, 2, 3]
