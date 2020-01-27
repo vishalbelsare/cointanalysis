@@ -10,7 +10,7 @@ from sklearn.utils.validation import (
     assert_all_finite
 )
 
-from .stat import StationarityTest
+from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca
 from ._utils import rms
 
@@ -236,7 +236,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             raise ValueError('X.shape[1] should be 2.')
 
         # Stationarity test
-        stat = StationarityTest(method=stat_method, regression='c')
+        stat = StationarityTester(method=stat_method, regression='c')
         if stat.is_stationary(X[:, 0], stat_pvalue) \
                 or stat.is_stationary(X[:, 1], stat_pvalue):
             stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3
