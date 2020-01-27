@@ -4,11 +4,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import coint
 
-from sklearn.utils.validation import (
-    check_array,
-    check_is_fitted,
-    assert_all_finite
-)
+from sklearn.utils.validation import check_array, check_is_fitted
 
 from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca

@@ -10,4 +10,3 @@ def check_shape(X, n_features=None):
     if n_features is not None and X.shape[1] != n_features:
         raise ValueError(f'X.shape[1] should be {n_features}')
     return X
-
