@@ -48,9 +48,13 @@ class StationarityTester:
             p-value of the stationarity test.
         """
         if self.method == 'ADF':
-            _, pvalue, _, _, _, _ = adfuller(x, regression=self.regression)
-            return pvalue
-        raise ValueError(f'Invalid method: {self.method}')
+            if self.regression in ('c', 'nc', 'ct', 'ctt'):
+                _, pvalue, _, _, _, _ = adfuller(x, regression=self.regression)
+                return pvalue
+            else:
+                raise ValueError(f'Invalid regression: {self.regression}')
+        else:
+            raise ValueError(f'Invalid method: {self.method}')
 
     def is_stationary(self, x, pvalue=.05):
         """
