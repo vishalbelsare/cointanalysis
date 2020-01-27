@@ -12,7 +12,7 @@ from sklearn.utils.validation import (
 
 from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca
-from ._utils import rms
+from ._utils import rms, check_shape
 
 
 class CointAnalysis(BaseEstimator, TransformerMixin):
@@ -123,9 +123,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         self.__check_params()
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         if self.axis in ('0', '1'):
             if self.axis == '0':
@@ -189,9 +187,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         check_is_fitted(self, ['coef_', 'mean_', 'std_'])
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         spread = X.dot(self.coef_)
 
@@ -231,9 +227,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         self.__check_params()
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         # Stationarity test
         stat = StationarityTester(method=stat_method, regression='c')

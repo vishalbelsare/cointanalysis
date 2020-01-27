@@ -3,9 +3,17 @@ import pytest
 import numpy as np
 from cointanalysis._stat import StationarityTester
 from cointanalysis import CointAnalysis
+from cointanalysis._utils import check_shape
 
 
 # --------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize('n_features', [0, 1, 3])
+def test_check_shape(n_features):
+    with pytest.raises(ValueError):
+        X = np.random.randn(100, n_features)
+        check_shape(X, n_features=2)
 
 
 def test_stat_method():
