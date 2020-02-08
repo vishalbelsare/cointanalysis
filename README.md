@@ -6,7 +6,7 @@
 
 Python library for cointegration analysis.
 
-![hyg-bkln-adjust](./sample/hyg-bkln-adjust.png)
+![hyg-bkln-adjust](./examples/howto/hyg-bkln-adjust.png)
 
 ## Features
 
@@ -27,10 +27,12 @@ See [Hamilton's book][hamilton].
 
 ## How to use
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/cointanalysis/blob/master/examples/howto/howto.ipynb)
+
 Let us see how the main class `CointAnalysis` works using two ETFs, [HYG][hyg] and [BKLN][bkln], as examples.
 Since they are both connected with liabilities of low-rated companies, these prices behave quite similarly.
 
-![hyg-bkln](./sample/hyg-bkln.png)
+![hyg-bkln](./examples/howto/hyg-bkln.png)
 
 ### Cointegration test
 
@@ -75,7 +77,7 @@ This means that spread "-0.18 HYG + BKLN" has the mean 6.97 and standard deviati
 
 In fact, the prices adjusted with these parameters clarifies the similarities of these ETFs:
 
-![hyg-bkln-adjust](./sample/hyg-bkln-adjust.png)
+![hyg-bkln-adjust](./examples/howto/hyg-bkln-adjust.png)
 
 The time-series of spread is obtained by applying the method `transform` subsequently.
 The mean and the standard deviation are automatically adjusted (unless you pass parameters asking not to).
@@ -96,7 +98,7 @@ spread = coint.fit_transform(X)
 
 The result looks like this:
 
-![hyg-bkln-spread](./sample/hyg-bkln-spread.png)
+![hyg-bkln-spread](./examples/howto/hyg-bkln-spread.png)
 
 ## Acknowledgements
 
