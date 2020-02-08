@@ -66,12 +66,12 @@ coint = CointAnalysis().fit(X)
 coint.coef_
 # np.array([-0.18  1.])
 coint.mean_
-# 7.00
+# 6.97
 coint.std_
 # 0.15
 ```
 
-This means that spread "-0.18 HYG + BKLN" has the mean 7.00 and standard deviation 0.15.
+This means that spread "-0.18 HYG + BKLN" has the mean 6.97 and standard deviation 0.15.
 
 In fact, the prices adjusted with these parameters clarifies the similarities of these ETFs:
 
