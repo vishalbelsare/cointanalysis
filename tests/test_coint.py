@@ -6,29 +6,31 @@ import numpy as np
 from cointanalysis import CointAnalysis
 
 
-@pytest.fixture
-def gauss():
-    np.random.seed(42)
-    return np.random.randn(1000, 2)
-
-@pytest.fixture
-def methods():
-    return ('AEG', )
-
-@pytest.fixture
-def axes():
-    return ('0', '1', 'PCA')
-
-@pytest.fixture
-def trends():
-    return ('c', )
-
-@pytest.fixture
-def adjusts():
-    return (True, False)
+params_seed = [42]
+params_method = ['AEG']
+params_axis = ['0', '1', 'PCA']
+params_trend = ['c']
+params_adjust = [True]
+params_gamma = [1.0, 2.0, 10.0, -1.0, -2.0, -10.0]
+params_n_samples = [1000]
 
 
-def test_positive(gauss, methods, axes, trends):
+# def make_gauss(seed, n_samples, n_series):
+#     np.random.seed(seed)
+#     return np.random.randn(n_samples, n_series)
+
+
+def make_stationary(seed, n_samples, n_series):
+    np.random.seed(seed)
+    return np.random.randn(n_samples, n_series)
+
+
+def make_nonstationary(seed, n_samples, n_series):
+    np.random.seed(seed)
+    return np.random.randn(n_samples, n_series).cumsum(axis=0)
+
+
+def make_cointegrated(seed, n_samples, gamma):
     """
     cointegrated pair:
         - x0_t = x0_t-1 + gauss[:, 0]
@@ -37,116 +39,100 @@ def test_positive(gauss, methods, axes, trends):
 
     cf: Hamilton [19.11.1, 19.11.2]
     """
-    for (method, axis, trend) in product(methods, axes, trends):
-        coint = CointAnalysis(
-            method=method,
-            axis=axis,
-            trend=trend,
-        )
-        for gamma in (1.0, 2.0, 10.0, -1.0, -2.0, -10.0):
-            x0 = gauss[:, 0].cumsum()
-            x1 = gamma * x0 + gauss[:, 1]
-            X = np.array([x0, x1]).T
+    np.random.seed(seed)
+    x0 = np.random.randn(n_samples).cumsum()
+    x1 = gamma * x0 + np.random.randn(n_samples)
+    return np.stack([x0, x1], axis=1)
 
-            assert coint.test(X).pvalue_ < 0.1
 
-def test_negative(gauss, methods, axes, trends):
+def make_notcointegrated(seed, n_samples, gamma):
     """
     cointegrated pair:
         - x0_t = x0_t-1 + gauss[:, 0]
         - x1_t = x1_t-1 + gamma * x0_t + gauss[:, 1]
     for various gamma.
     """
-    for (method, axis, trend) in product(methods, axes, trends):
-        coint = CointAnalysis(
-            method=method,
-            axis=axis,
-            trend=trend,
-        )
-        for gamma in (1.0, 2.0, 10.0, -1.0, -2.0, -10.0):
-            x0 = gauss[:, 0].cumsum()
-            x1 = (gamma * x0 + gauss[:, 1]).cumsum()
-            X = np.array([x0, x1]).T
+    np.random.seed(seed)
+    x0 = np.random.randn(n_samples).cumsum()
+    x1 = np.random.randn(n_samples).cumsum()
+    return np.stack([x0, x1], axis=1)
 
-            assert coint.test(X).pvalue_ > 0.1
 
-def test_stationary(gauss, methods, axes, trends):
-    """
-    cointegrated pair:
-        - x0_t = x0_t-1 + gauss[:, 0]
-        - x1_t = gauss[:, 1]  (stationary as such)
-    """
-    for (method, axis, trend) in product(methods, axes, trends):
-        coint = CointAnalysis(
-            method=method,
-            axis=axis,
-            trend=trend,
-        )
-        x0 = gauss[:, 0].cumsum()
-        x1 = gauss[:, 1]
-        X = np.array([x0, x1]).T
+# --------------------------------------------------------------------------------
 
-        assert coint.test(X).pvalue_ is np.nan
 
-def test_fit(gauss, methods, axes, trends):
-    """
-    cointegrated pair:
-        - x0_t = x0_t-1 + gauss[:, 0]
-        - x1_t = gamma * x0_t + gauss[:, 1]
-    for various gamma.
-    """
-    for (method, axis, trend) in product(methods, axes, trends):
-        coint = CointAnalysis(
-            method=method,
-            axis=axis,
-            trend=trend,
-        )
-        for gamma in (1.0, 2.0, 10.0, -1.0, -2.0, -10.0):
-            x0 = gauss[:, 0].cumsum()
-            x1 = gamma * x0 + gauss[:, 1]
-            X = np.array([x0, x1]).T
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('method', params_method)
+@pytest.mark.parametrize('axis', params_axis)
+@pytest.mark.parametrize('trend', params_trend)
+@pytest.mark.parametrize('gamma', params_gamma)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+def test_cointegrated(seed, method, axis, trend, gamma, n_samples):
+    coint = CointAnalysis(method=method, axis=axis, trend=trend)
+    X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
 
-            coint.fit(X)
+    assert coint.test(X).pvalue_ < 0.2
 
-            gamma_fit = - coint.coef_[0] / coint.coef_[1]
-            gamma_exp = gamma
-            mean_fit = coint.mean_
-            mean_exp = 0.0
-            std_fit = coint.std_
-            std_exp = np.abs(coint.coef_[1])
 
-            assert np.isclose(gamma_fit, gamma_exp, rtol=1e-1)
-            assert np.isclose(mean_fit, mean_exp, atol=np.abs(coint.coef_[1]) * 1e-1)
-            assert np.isclose(std_fit, std_exp, rtol=1e-1)
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('method', params_method)
+@pytest.mark.parametrize('axis', params_axis)
+@pytest.mark.parametrize('trend', params_trend)
+@pytest.mark.parametrize('gamma', params_gamma)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+def test_notcointegrated(seed, method, axis, trend, gamma, n_samples):
+    coint = CointAnalysis(method=method, axis=axis, trend=trend)
+    X = make_notcointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
 
-def test_transform(gauss, methods, axes, trends, adjusts):
-    """
-    cointegrated pair:
-        - x0_t = x0_t-1 + gauss[:, 0]
-        - x1_t = gamma * x0_t + gauss[:, 1]
-    for various gamma.
-    """
-    for (method, axis, trend, adjust) in product(methods, axes, trends, adjusts):
-        coint = CointAnalysis(
-            method=method,
-            axis=axis,
-            trend=trend,
-            adjust_mean=adjust,
-            adjust_std=adjust,
-        )
-        for gamma in (1.0, 2.0, 10.0, -1.0, -2.0, -10.0):
-            x0 = gauss[:, 0].cumsum()
-            x1 = gamma * x0 + gauss[:, 1]
-            X = np.array([x0, x1]).T
+    assert coint.test(X).pvalue_ > 0.1
 
-            spread = coint.fit_transform(X)
 
-            if adjust:
-                mean_exp = 0.0
-                std_exp = 1.0
-            else:
-                mean_exp = coint.mean_
-                std_exp = coint.std_
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('method', params_method)
+@pytest.mark.parametrize('axis', params_axis)
+@pytest.mark.parametrize('trend', params_trend)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+def test_stationary(seed, method, axis, trend, n_samples):
+    coint = CointAnalysis(method=method, axis=axis, trend=trend)
+    x0 = make_stationary(seed=seed, n_samples=n_samples, n_series=1)
+    x1 = make_nonstationary(seed=seed, n_samples=n_samples, n_series=1)
+    X = np.concatenate([x0, x1], axis=1)
 
-            assert np.isclose(spread.mean(), mean_exp, atol=1e-2)
-            assert np.isclose(spread.std(), std_exp, rtol=1e-2)
+    assert coint.test(X).pvalue_ is np.nan
+
+
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('method', params_method)
+@pytest.mark.parametrize('axis', params_axis)
+@pytest.mark.parametrize('trend', params_trend)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('gamma', params_gamma)
+def test_fit(seed, method, axis, trend, n_samples, gamma):
+    coint = CointAnalysis(method=method, axis=axis, trend=trend)
+    X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
+    coint.fit(X)
+
+    assert np.isclose(-coint.coef_[0] / coint.coef_[1], gamma, rtol=1e-1)
+    assert np.isclose(coint.mean_, 0, atol=abs(coint.coef_[1] * 1e-1))
+    assert np.isclose(coint.std_, np.abs(coint.coef_[1]), rtol=1e-1)
+
+
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('method', params_method)
+@pytest.mark.parametrize('axis', params_axis)
+@pytest.mark.parametrize('trend', params_trend)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('gamma', params_gamma)
+@pytest.mark.parametrize('adjust', params_adjust)
+def test_transform(seed, method, axis, trend, n_samples, gamma, adjust):
+    coint = CointAnalysis(method=method, axis=axis, trend=trend)
+    X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
+
+    spread = coint.fit_transform(X)
+
+    if adjust:
+        assert np.isclose(spread.mean(), 0.0, atol=1e-1)
+        assert np.isclose(spread.std(), 1.0, atol=1e-1)
+    else:
+        assert np.isclose(spread.mean(), coint.mean_, atol=1e-1)
+        assert np.isclose(spread.std(), coint.std_, atol=1e-1)

@@ -4,15 +4,11 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from statsmodels.tsa.stattools import coint
 
-from sklearn.utils.validation import (
-    check_array,
-    check_is_fitted,
-    assert_all_finite
-)
+from sklearn.utils.validation import check_array, check_is_fitted
 
-from .stat import StationarityTest
+from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca
-from ._utils import rms
+from ._utils import rms, check_shape
 
 
 class CointAnalysis(BaseEstimator, TransformerMixin):
@@ -123,9 +119,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         self.__check_params()
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         if self.axis in ('0', '1'):
             if self.axis == '0':
@@ -189,9 +183,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         check_is_fitted(self, ['coef_', 'mean_', 'std_'])
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         spread = X.dot(self.coef_)
 
@@ -231,12 +223,10 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         """
         self.__check_params()
         X = check_array(X)
-        assert_all_finite(X)
-        if X.shape[1] != 2:
-            raise ValueError('X.shape[1] should be 2.')
+        X = check_shape(X, n_features=2)
 
         # Stationarity test
-        stat = StationarityTest(method=stat_method, regression='c')
+        stat = StationarityTester(method=stat_method, regression='c')
         if stat.is_stationary(X[:, 0], stat_pvalue) \
                 or stat.is_stationary(X[:, 1], stat_pvalue):
             stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3
@@ -256,20 +246,20 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
             if self.method == 'AEG':
                 stat_, pvalue_, crit_ = coint(X0, X1, trend=self.trend)
-            if self.method == 'KPSS':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
-            if self.method == 'Johansen':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'KPSS':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'Johansen':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
         if self.axis == 'PCA':
             X0, X1 = X[:, 0], X[:, 1]
 
             if self.method == 'AEG':
                 stat_, pvalue_, crit_ = aeg_pca(X0, X1, trend=self.trend)
-            if self.method == 'KPSS':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
-            if self.method == 'Johansen':
-                stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'KPSS':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
+            # if self.method == 'Johansen':
+            #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
         self.stat_ = stat_
         self.pvalue_ = pvalue_
