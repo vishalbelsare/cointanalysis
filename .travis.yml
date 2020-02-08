@@ -13,8 +13,8 @@ install:
 script:
   - echo "script start"
   - pytest --cov=cointanalysis
-  - sh tests/sample.sh
-  - flake8 cointanalysis
+  - sh tests/examples.sh
   - echo "script end"
 after_success:
+  - flake8 cointanalysis
   - codecov
