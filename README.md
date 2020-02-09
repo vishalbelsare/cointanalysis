@@ -53,7 +53,7 @@ coint.pvalue_
 # 0.0055
 ```
 
-The test have rejected the null-hypothesis by p-value of 0.55%, which implies cointegration.
+The test has rejected the null-hypothesis by the p-value of 0.55%, which implies cointegration.
 
 [hyg]: https://www.bloomberg.com/quote/HYG:US
 [bkln]: https://www.bloomberg.com/quote/BKLN:US
@@ -73,7 +73,7 @@ coint.std_
 # 0.15
 ```
 
-This means that spread "-0.18 HYG + BKLN" has the mean 6.97 and standard deviation 0.15.
+This means that spread "-0.18 HYG + BKLN" has a mean 6.97 and a standard deviation of 0.15.
 
 In fact, the prices adjusted with these parameters clarifies the similarities of these ETFs:
 
