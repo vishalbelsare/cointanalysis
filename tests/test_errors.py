@@ -60,11 +60,11 @@ def test_coint_test():
         coint.test(X)
 
 
-def test_collinear():
-    coint = CointAnalysis(axis='PCA')
-    x = np.random.randn(1000).cumsum()
-    small_noise = 0.001 * np.random.randn(1000)
-    X = np.stack([x, x + small_noise], axis=1)
+# def test_collinear():
+#     coint = CointAnalysis(axis='PCA')
+#     x = np.random.randn(1000).cumsum()
+#     small_noise = 0.001 * np.random.randn(1000)
+#     X = np.stack([x, x + small_noise], axis=1)
 
-    with pytest.raises(RuntimeWarning):
-        coint.test(X)
+#     with pytest.raises(RuntimeWarning):
+#         coint.test(X)
