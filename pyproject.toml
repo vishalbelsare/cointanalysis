@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cointanalysis"
-version = "0.2.3"
+version = "0.3.0"
 description = "Python package for cointegration analysis."
 authors = ["Shota Imaki <shota.imaki@icloud.com>"]
 license = "BSD-3-Clause"
