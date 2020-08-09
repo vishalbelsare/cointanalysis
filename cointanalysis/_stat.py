@@ -23,14 +23,15 @@ class StationarityTester:
     >>> stat.pvalue(brown)  # returns p-value
     0.60
     """
-    def __init__(self, method='ADF', regression='c'):
+
+    def __init__(self, method="ADF", regression="c"):
         self.method = method
         self.regression = regression
 
     @property
     def null_hypothesis(self):
-        if self.method == 'ADF':
-            return 'unit-root'
+        if self.method == "ADF":
+            return "unit-root"
 
     def pvalue(self, x):
         """
@@ -47,16 +48,16 @@ class StationarityTester:
         pvalue : float
             p-value of the stationarity test.
         """
-        if self.method == 'ADF':
-            if self.regression in ('c', 'nc', 'ct', 'ctt'):
+        if self.method == "ADF":
+            if self.regression in ("c", "nc", "ct", "ctt"):
                 _, pvalue, _, _, _, _ = adfuller(x, regression=self.regression)
                 return pvalue
             else:
-                raise ValueError(f'Invalid regression: {self.regression}')
+                raise ValueError(f"Invalid regression: {self.regression}")
         else:
-            raise ValueError(f'Invalid method: {self.method}')
+            raise ValueError(f"Invalid method: {self.method}")
 
-    def is_stationary(self, x, pvalue=.05):
+    def is_stationary(self, x, pvalue=0.05):
         """
         Return whether stationarity test implies stationarity.
 
@@ -73,5 +74,5 @@ class StationarityTester:
         is_stationary : bool
             True may imply the stationarity.
         """
-        if self.null_hypothesis == 'unit-root':
+        if self.null_hypothesis == "unit-root":
             return self.pvalue(x) < pvalue
