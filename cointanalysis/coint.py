@@ -81,20 +81,18 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
     array([-1.50289357, ...])
     # = (X.dot(coint.coef_) - coint.mean_) / coint.std_)
     """
-    def __check_params(self):
-        if self.method not in ('AEG', ):
-            raise ValueError(f'Invalid method: {self.method}.')
-        if self.axis not in ('0', '1', 'PCA'):
-            raise ValueError(f'Invalid axis: {self.axis}.')
-        if self.trend not in ('c', 'nc'):
-            raise ValueError(f'Invalid trend: {self.trend}.')
 
-    def __init__(self,
-                 method='AEG',
-                 axis='0',
-                 trend='c',
-                 adjust_mean=True,
-                 adjust_std=True):
+    def __check_params(self):
+        if self.method not in ("AEG",):
+            raise ValueError(f"Invalid method: {self.method}.")
+        if self.axis not in ("0", "1", "PCA"):
+            raise ValueError(f"Invalid axis: {self.axis}.")
+        if self.trend not in ("c", "nc"):
+            raise ValueError(f"Invalid trend: {self.trend}.")
+
+    def __init__(
+        self, method="AEG", axis="0", trend="c", adjust_mean=True, adjust_std=True
+    ):
         """Initialize self."""
         self.method = method
         self.axis = axis
@@ -121,34 +119,34 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         X = check_array(X)
         X = check_shape(X, n_features=2)
 
-        if self.axis in ('0', '1'):
-            if self.axis == '0':
+        if self.axis in ("0", "1"):
+            if self.axis == "0":
                 X, y = X[:, 0].reshape(-1, 1), X[:, 1]
-            if self.axis == '1':
+            if self.axis == "1":
                 X, y = X[:, 1].reshape(-1, 1), X[:, 0]
 
-            if self.trend == 'c':
+            if self.trend == "c":
                 fi = True  # fit intercept
-            if self.trend == 'nc':
+            if self.trend == "nc":
                 fi = False
 
             reg = LinearRegression(fit_intercept=fi).fit(X, y)
 
-            if self.axis == '0':
-                coef_ = np.array([- reg.coef_[0], 1.0])
-            if self.axis == '1':
-                coef_ = np.array([1.0, - reg.coef_[0]])
+            if self.axis == "0":
+                coef_ = np.array([-reg.coef_[0], 1.0])
+            if self.axis == "1":
+                coef_ = np.array([1.0, -reg.coef_[0]])
 
-            mean_ = getattr(reg, 'intercept_', 0.0)
+            mean_ = getattr(reg, "intercept_", 0.0)
             std_ = (y - reg.predict(X)).std()
 
-        if self.axis == 'PCA':
-            if self.trend == 'c':
+        if self.axis == "PCA":
+            if self.trend == "c":
                 pca = PCA(n_components=2).fit(X)
                 coef_ = pca.components_[1]
                 mean_ = pca.mean_.dot(coef_)
                 std_ = np.sqrt(pca.explained_variance_[1])
-            if self.trend == 'nc':
+            if self.trend == "nc":
                 # This is pseudo-PCA, without adjusting the origin to the
                 # center of samples.
                 rms0 = rms(X[:, 0])
@@ -181,7 +179,7 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             If `self.adjust_mean` and/or `self.adjust_std` are True,
             mean and/or std are adjusted to 1.0 and 0.0.
         """
-        check_is_fitted(self, ['coef_', 'mean_', 'std_'])
+        check_is_fitted(self, ["coef_", "mean_", "std_"])
         X = check_array(X)
         X = check_shape(X, n_features=2)
 
@@ -193,12 +191,13 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             if not self.std_ < 10e-10:
                 spread /= self.std_
             else:
-                raise RuntimeWarning('Did not normalize the spread '
-                                     'because std < 10e-10.')
+                raise RuntimeWarning(
+                    "Did not normalize the spread " "because std < 10e-10."
+                )
 
         return spread
 
-    def test(self, X, stat_method='ADF', stat_pvalue=.05):
+    def test(self, X, stat_method="ADF", stat_pvalue=0.05):
         """
         Carry out cointegration test.
         Null-hypothesis is no cointegration.
@@ -226,9 +225,10 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
         X = check_shape(X, n_features=2)
 
         # Stationarity test
-        stat = StationarityTester(method=stat_method, regression='c')
-        if stat.is_stationary(X[:, 0], stat_pvalue) \
-                or stat.is_stationary(X[:, 1], stat_pvalue):
+        stat = StationarityTester(method=stat_method, regression="c")
+        if stat.is_stationary(X[:, 0], stat_pvalue) or stat.is_stationary(
+            X[:, 1], stat_pvalue
+        ):
             stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3
 
             self.stat_ = stat_
@@ -238,23 +238,23 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
             return self
 
         # Cointegration test
-        if self.axis in ('0', '1'):
-            if self.axis == '0':
+        if self.axis in ("0", "1"):
+            if self.axis == "0":
                 X0, X1 = X[:, 0], X[:, 1]
-            if self.axis == '1':
+            if self.axis == "1":
                 X0, X1 = X[:, 1], X[:, 0]
 
-            if self.method == 'AEG':
+            if self.method == "AEG":
                 stat_, pvalue_, crit_ = coint(X0, X1, trend=self.trend)
             # if self.method == 'KPSS':
             #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
             # if self.method == 'Johansen':
             #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
 
-        if self.axis == 'PCA':
+        if self.axis == "PCA":
             X0, X1 = X[:, 0], X[:, 1]
 
-            if self.method == 'AEG':
+            if self.method == "AEG":
                 stat_, pvalue_, crit_ = aeg_pca(X0, X1, trend=self.trend)
             # if self.method == 'KPSS':
             #     stat_, pvalue_, crit_ = np.nan, np.nan, (np.nan) * 3  # TODO
