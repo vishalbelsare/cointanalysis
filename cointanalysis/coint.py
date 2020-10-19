@@ -1,14 +1,16 @@
 import numpy as np
-from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import BaseEstimator
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
 from statsmodels.tsa.stattools import coint
 
-from sklearn.utils.validation import check_array, check_is_fitted
-
-from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca
-from ._utils import rms, check_shape
+from ._stat import StationarityTester
+from ._utils import check_shape
+from ._utils import rms
 
 
 class CointAnalysis(BaseEstimator, TransformerMixin):
