@@ -14,14 +14,15 @@ class StationarityTester:
 
     Examples
     --------
+    >>> import numpy as np
     >>> np.random.seed(42)
     >>> gauss = np.random.randn(100)  # stationary
-    >>> stat = StationarityAnalisis()
-    >>> stat.pvalue(gauss)  # returns p-value
-    1.16e-17
+    >>> stat = StationarityTester()
+    >>> stat.pvalue(gauss)
+    1.1655044784188669e-17
     >>> brown = gauss.cumsum()
-    >>> stat.pvalue(brown)  # returns p-value
-    0.60
+    >>> stat.pvalue(brown)
+    0.6020814791099098
     """
 
     def __init__(self, method="ADF", regression="c"):
