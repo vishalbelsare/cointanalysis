@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
-from statsmodels.tsa.adfvalues import mackinnonp, mackinnoncrit
+from statsmodels.tsa.adfvalues import mackinnoncrit
+from statsmodels.tsa.adfvalues import mackinnonp
 from statsmodels.tsa.stattools import adfuller
 
 from ._utils import rms

@@ -1,14 +1,16 @@
 import numpy as np
-from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import BaseEstimator
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted
 from statsmodels.tsa.stattools import coint
 
-from sklearn.utils.validation import check_array, check_is_fitted
-
-from ._stat import StationarityTester
 from ._aeg_pca import aeg_pca
-from ._utils import rms, check_shape
+from ._stat import StationarityTester
+from ._utils import check_shape
+from ._utils import rms
 
 
 class CointAnalysis(BaseEstimator, TransformerMixin):
@@ -60,26 +62,35 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
 
     Examples
     --------
+    Here is a pair of cointegrated time-series:
     >>> import numpy as np
     >>> np.random.seed(42)
     >>> x0 = np.random.rand(1000).cumsum()
     >>> x1 = 2 * x0 + np.random.rand(1000)
-    >>> X = np.array([x0, x1]).T
-    >>> coint = CointAnalysis()
-    >>> coint.pvalue(X)
-    1.92836794233469e-18
+    >>> X = np.stack((x0, x1), 1)
 
-    >>> coint.fit(X)
+    Cointegration test:
+    >>> coint = CointAnalysis().test(X)
+    >>> coint.stat_
+    -inf
+    >>> coint.pvalue_
+    0.0
+    >>> coint.crit_
+    array([-3.90743646, -3.34225305, -3.04869817])
+
+    Finding cointegration equation:
+    >>> coint = CointAnalysis().fit(X)
     >>> coint.coef_
-    array([-1.99831281,  1. ])
+    array([-1.9999203,  1.       ])
     >>> coint.mean_
-    0.011497817617380335
+    0.5267391195138771
     >>> coint.std_
-    0.9488566139638319
+    0.2918203104682326
 
-    >>> coint.transform(X)
-    array([-1.50289357, ...])
-    # = (X.dot(coint.coef_) - coint.mean_) / coint.std_)
+    Transform into stationary time-series:
+    >>> Xs = coint.transform(X)
+    >>> Xs.shape
+    (1000,)
     """
 
     def __check_params(self):
@@ -93,7 +104,6 @@ class CointAnalysis(BaseEstimator, TransformerMixin):
     def __init__(
         self, method="AEG", axis="0", trend="c", adjust_mean=True, adjust_std=True
     ):
-        """Initialize self."""
         self.method = method
         self.axis = axis
         self.trend = trend
