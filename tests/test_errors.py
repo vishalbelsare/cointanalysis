@@ -1,15 +1,14 @@
+import numpy as np
 import pytest
 
-import numpy as np
-from cointanalysis._stat import StationarityTester
 from cointanalysis import CointAnalysis
+from cointanalysis._stat import StationarityTester
 from cointanalysis._utils import check_shape
-
 
 # --------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('n_features', [0, 1, 3])
+@pytest.mark.parametrize("n_features", [0, 1, 3])
 def test_check_shape(n_features):
     with pytest.raises(ValueError):
         X = np.random.randn(100, n_features)
@@ -19,20 +18,20 @@ def test_check_shape(n_features):
 def test_stat_method():
     X = np.random.randn(100)
     with pytest.raises(ValueError):
-        StationarityTester(method='hoge').pvalue(X)
+        StationarityTester(method="hoge").pvalue(X)
 
 
 def test_stat_regression():
     X = np.random.randn(100)
     with pytest.raises(ValueError):
-        StationarityTester(regression='hoge').pvalue(X)
+        StationarityTester(regression="hoge").pvalue(X)
 
 
 def test_coint_fit():
     X = np.random.randn(100, 2)
 
     with pytest.raises(ValueError):
-        coint = CointAnalysis(method='hoge')
+        coint = CointAnalysis(method="hoge")
         coint.fit(X)
 
     with pytest.raises(ValueError):
@@ -40,7 +39,7 @@ def test_coint_fit():
         coint.fit(X)
 
     with pytest.raises(ValueError):
-        coint = CointAnalysis(trend='ct')
+        coint = CointAnalysis(trend="ct")
         coint.fit(X)
 
 
@@ -48,7 +47,7 @@ def test_coint_test():
     X = np.random.randn(100, 2)
 
     with pytest.raises(ValueError):
-        coint = CointAnalysis(method='hoge')
+        coint = CointAnalysis(method="hoge")
         coint.test(X)
 
     with pytest.raises(ValueError):
@@ -56,7 +55,7 @@ def test_coint_test():
         coint.test(X)
 
     with pytest.raises(ValueError):
-        coint = CointAnalysis(trend='ct')
+        coint = CointAnalysis(trend="ct")
         coint.test(X)
 
 

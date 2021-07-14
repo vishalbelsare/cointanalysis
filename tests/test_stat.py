@@ -1,8 +1,7 @@
+import numpy as np
 import pytest
 
-import numpy as np
 from cointanalysis._stat import StationarityTester
-
 
 params_seed = [42, 1, 2, 3]
 params_n_samples = [100, 1000, 10000]
@@ -21,8 +20,8 @@ def make_nonstationary(seed, n_samples):
 # --------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("n_samples", params_n_samples)
 def test_stationary(seed, n_samples):
     X = make_stationary(seed, n_samples)
 
@@ -30,8 +29,8 @@ def test_stationary(seed, n_samples):
     assert StationarityTester().is_stationary(X)
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("n_samples", params_n_samples)
 def test_nonstationary(seed, n_samples):
     X = make_nonstationary(seed, n_samples)
 

@@ -1,15 +1,14 @@
-import pytest
-
 from itertools import product
+
 import numpy as np
+import pytest
 
 from cointanalysis import CointAnalysis
 
-
 params_seed = [42]
-params_method = ['AEG']
-params_axis = ['0', '1', 'PCA']
-params_trend = ['c']
+params_method = ["AEG"]
+params_axis = ["0", "1", "PCA"]
+params_trend = ["c"]
 params_adjust = [True]
 params_gamma = [1.0, 2.0, 10.0, -1.0, -2.0, -10.0]
 params_n_samples = [1000]
@@ -61,12 +60,12 @@ def make_notcointegrated(seed, n_samples, gamma):
 # --------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('method', params_method)
-@pytest.mark.parametrize('axis', params_axis)
-@pytest.mark.parametrize('trend', params_trend)
-@pytest.mark.parametrize('gamma', params_gamma)
-@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("method", params_method)
+@pytest.mark.parametrize("axis", params_axis)
+@pytest.mark.parametrize("trend", params_trend)
+@pytest.mark.parametrize("gamma", params_gamma)
+@pytest.mark.parametrize("n_samples", params_n_samples)
 def test_cointegrated(seed, method, axis, trend, gamma, n_samples):
     coint = CointAnalysis(method=method, axis=axis, trend=trend)
     X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
@@ -74,12 +73,12 @@ def test_cointegrated(seed, method, axis, trend, gamma, n_samples):
     assert coint.test(X).pvalue_ < 0.2
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('method', params_method)
-@pytest.mark.parametrize('axis', params_axis)
-@pytest.mark.parametrize('trend', params_trend)
-@pytest.mark.parametrize('gamma', params_gamma)
-@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("method", params_method)
+@pytest.mark.parametrize("axis", params_axis)
+@pytest.mark.parametrize("trend", params_trend)
+@pytest.mark.parametrize("gamma", params_gamma)
+@pytest.mark.parametrize("n_samples", params_n_samples)
 def test_notcointegrated(seed, method, axis, trend, gamma, n_samples):
     coint = CointAnalysis(method=method, axis=axis, trend=trend)
     X = make_notcointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
@@ -87,11 +86,11 @@ def test_notcointegrated(seed, method, axis, trend, gamma, n_samples):
     assert coint.test(X).pvalue_ > 0.1
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('method', params_method)
-@pytest.mark.parametrize('axis', params_axis)
-@pytest.mark.parametrize('trend', params_trend)
-@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("method", params_method)
+@pytest.mark.parametrize("axis", params_axis)
+@pytest.mark.parametrize("trend", params_trend)
+@pytest.mark.parametrize("n_samples", params_n_samples)
 def test_stationary(seed, method, axis, trend, n_samples):
     coint = CointAnalysis(method=method, axis=axis, trend=trend)
     x0 = make_stationary(seed=seed, n_samples=n_samples, n_series=1)
@@ -101,12 +100,12 @@ def test_stationary(seed, method, axis, trend, n_samples):
     assert coint.test(X).pvalue_ is np.nan
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('method', params_method)
-@pytest.mark.parametrize('axis', params_axis)
-@pytest.mark.parametrize('trend', params_trend)
-@pytest.mark.parametrize('n_samples', params_n_samples)
-@pytest.mark.parametrize('gamma', params_gamma)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("method", params_method)
+@pytest.mark.parametrize("axis", params_axis)
+@pytest.mark.parametrize("trend", params_trend)
+@pytest.mark.parametrize("n_samples", params_n_samples)
+@pytest.mark.parametrize("gamma", params_gamma)
 def test_fit(seed, method, axis, trend, n_samples, gamma):
     coint = CointAnalysis(method=method, axis=axis, trend=trend)
     X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
@@ -117,13 +116,13 @@ def test_fit(seed, method, axis, trend, n_samples, gamma):
     assert np.isclose(coint.std_, np.abs(coint.coef_[1]), rtol=1e-1)
 
 
-@pytest.mark.parametrize('seed', params_seed)
-@pytest.mark.parametrize('method', params_method)
-@pytest.mark.parametrize('axis', params_axis)
-@pytest.mark.parametrize('trend', params_trend)
-@pytest.mark.parametrize('n_samples', params_n_samples)
-@pytest.mark.parametrize('gamma', params_gamma)
-@pytest.mark.parametrize('adjust', params_adjust)
+@pytest.mark.parametrize("seed", params_seed)
+@pytest.mark.parametrize("method", params_method)
+@pytest.mark.parametrize("axis", params_axis)
+@pytest.mark.parametrize("trend", params_trend)
+@pytest.mark.parametrize("n_samples", params_n_samples)
+@pytest.mark.parametrize("gamma", params_gamma)
+@pytest.mark.parametrize("adjust", params_adjust)
 def test_transform(seed, method, axis, trend, n_samples, gamma, adjust):
     coint = CointAnalysis(method=method, axis=axis, trend=trend)
     X = make_cointegrated(seed=seed, n_samples=n_samples, gamma=gamma)
